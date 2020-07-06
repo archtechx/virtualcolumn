@@ -20,6 +20,15 @@ class MyModel extends Model
     use VirtualColumn;
 
     public $guarded = [];
+    
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'custom1',
+            'custom2',
+        ];
+    }
 }
 ```
 
