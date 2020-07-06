@@ -1,0 +1,16 @@
+name: CI
+
+on: [ push, pull_request ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: composer install
+    - name: Start Redis
+      uses: supercharge/redis-github-action@1.1.0
+    - name: Run tests
+      run: phpunit
