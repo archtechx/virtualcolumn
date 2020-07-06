@@ -10,7 +10,7 @@ composer require stancl/virtual-column
 
 ## Usage
 
-Use the `VirtualColumn` model on your model:
+Use the `VirtualColumn` trait on your model:
 ```php
 use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
