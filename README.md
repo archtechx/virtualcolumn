@@ -5,7 +5,7 @@
 Supports Laravel 6 and 7.
 
 ```
-composer require stancl/virtual-column
+composer require stancl/virtualcolumn
 ```
 
 ## Usage
