@@ -25,16 +25,16 @@ class VirtualColumnTest extends TestCase
 
         // Test that model works correctly
         $this->assertSame('bar', $model->foo);
-        $this->assertSame(null, $model->data);
+        $this->assertNull($model->data);
 
         // Low level test to assert database structure
         $this->assertSame(['foo' => 'bar'], json_decode(DB::table('my_models')->where('id', $model->id)->first()->data, true));
-        $this->assertSame(null, DB::table('my_models')->where('id', $model->id)->first()->foo ?? null);
+        $this->assertNull(DB::table('my_models')->where('id', $model->id)->first()->foo ?? null);
 
         // Model has the correct structure when retrieved
         $model = MyModel::first();
         $this->assertSame('bar', $model->foo);
-        $this->assertSame(null, $model->data);
+        $this->assertNull($model->data);
 
         // Model can be updated
         $model->update([
@@ -44,14 +44,14 @@ class VirtualColumnTest extends TestCase
 
         $this->assertSame('baz', $model->foo);
         $this->assertSame('xyz', $model->abc);
-        $this->assertSame(null, $model->data);
+        $this->assertNull($model->data);
 
         // Model can be retrieved after update & is structure correctly
         $model = MyModel::first();
 
         $this->assertSame('baz', $model->foo);
         $this->assertSame('xyz', $model->abc);
-        $this->assertSame(null, $model->data);
+        $this->assertNull($model->data);
     }
 
     /** @test */
