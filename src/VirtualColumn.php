@@ -30,6 +30,7 @@ trait VirtualColumn
 
         foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
             $model->setAttribute($key, $value);
+            $model->syncOriginalAttribute($key);
         }
 
         $model->setAttribute(static::getDataColumn(), null);
@@ -52,6 +53,7 @@ trait VirtualColumn
                 ]));
 
                 unset($model->attributes[$key]);
+                unset($model->original[$key]);
             }
         }
 
