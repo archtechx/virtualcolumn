@@ -44,7 +44,7 @@ class VirtualColumnTest extends TestCase
         ]);
 
         $this->assertSame('baz', $model->foo);
-        $this->assertSame('bar', $model->getOriginal('foo'));
+        $this->assertSame('baz', $model->getOriginal('foo'));
         $this->assertSame('xyz', $model->abc);
         $this->assertSame('xyz', $model->getOriginal('abc'));
         $this->assertSame(null, $model->data);
