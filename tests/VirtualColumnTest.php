@@ -34,6 +34,7 @@ class VirtualColumnTest extends TestCase
         // Model has the correct structure when retrieved
         $model = MyModel::first();
         $this->assertSame('bar', $model->foo);
+        $this->assertSame('bar', $model->getOriginal('foo'));
         $this->assertSame(null, $model->data);
 
         // Model can be updated
@@ -43,7 +44,9 @@ class VirtualColumnTest extends TestCase
         ]);
 
         $this->assertSame('baz', $model->foo);
+        $this->assertSame('baz', $model->getOriginal('foo'));
         $this->assertSame('xyz', $model->abc);
+        $this->assertSame('xyz', $model->getOriginal('abc'));
         $this->assertSame(null, $model->data);
 
         // Model can be retrieved after update & is structure correctly
