@@ -139,4 +139,13 @@ trait VirtualColumn
             'id',
         ];
     }
+
+    public function generateColumnName(string $column): string
+    {
+        if (in_array($column, static::getCustomColumns())) {
+            return $column;
+        }
+
+        return static::getDataColumn() . '->' . $column;
+    }
 }
