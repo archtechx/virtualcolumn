@@ -88,6 +88,23 @@ class VirtualColumnTest extends TestCase
         MyModel::first();
     }
 
+    /** @test */
+    public function column_names_are_generated_correctly()
+    {
+        // AnotherModel's virtual data column name is 'virtual'
+        $virtualColumnName = 'virtual->foo';
+        $customColumnName = 'custom1';
+
+        /** @var FooModel $model */
+        $model = FooModel::create([
+            'custom1' => $customColumnName,
+            'foo' => $virtualColumnName
+        ]);
+
+        $this->assertSame($customColumnName, $model->generateColumnName('custom1'));
+        $this->assertSame($virtualColumnName, $model->generateColumnName('foo'));
+    }
+
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 }
 
@@ -105,5 +122,27 @@ class MyModel extends Model
             'custom1',
             'custom2',
         ];
+    }
+}
+
+class FooModel extends Model
+{
+    use VirtualColumn;
+
+    protected $guarded = [];
+    public $timestamps = false;
+
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'custom1',
+            'custom2',
+        ];
+    }
+
+    public static function getDataColumn(): string
+    {
+        return 'virtual';
     }
 }
