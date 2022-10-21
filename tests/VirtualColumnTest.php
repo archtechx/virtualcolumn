@@ -91,7 +91,7 @@ class VirtualColumnTest extends TestCase
     /** @test */
     public function column_names_are_generated_correctly()
     {
-        // AnotherModel's virtual data column name is 'virtual'
+        // FooModel's virtual data column name is 'virtual'
         $virtualColumnName = 'virtual->foo';
         $customColumnName = 'custom1';
 
