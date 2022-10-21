@@ -139,4 +139,18 @@ trait VirtualColumn
             'id',
         ];
     }
+
+    /**
+     * Get a column name for an attribute that can be used in SQL queries.
+     *
+     * (`foo` or `data->foo` depending on whether `foo` is in custom columns)
+     */
+    public function getColumnForQuery(string $column): string
+    {
+        if (in_array($column, static::getCustomColumns(), true)) {
+            return $column;
+        }
+
+        return static::getDataColumn() . '->' . $column;
+    }
 }
