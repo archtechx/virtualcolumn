@@ -140,7 +140,7 @@ trait VirtualColumn
         ];
     }
 
-    public function generateColumnName(string $column): string
+    public function getColumnForQuery(string $column): string
     {
         if (in_array($column, static::getCustomColumns())) {
             return $column;

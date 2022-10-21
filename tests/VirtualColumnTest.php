@@ -101,8 +101,8 @@ class VirtualColumnTest extends TestCase
             'foo' => $virtualColumnName
         ]);
 
-        $this->assertSame($customColumnName, $model->generateColumnName('custom1'));
-        $this->assertSame($virtualColumnName, $model->generateColumnName('foo'));
+        $this->assertSame($customColumnName, $model->getColumnForQuery('custom1'));
+        $this->assertSame($virtualColumnName, $model->getColumnForQuery('foo'));
     }
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
