@@ -58,6 +58,49 @@ class VirtualColumnTest extends TestCase
     }
 
     /** @test */
+    public function keys_defined_in_the_virtual_columns_function_go_into_data_json_column()
+    {
+        $model = VirtualModel::create([
+            'id' => 1,
+            'foo' => 'bar',
+        ]);
+
+        // Test that model works correctly
+        $this->assertSame(1, $model->id);
+        $this->assertSame('bar', $model->foo);
+        $this->assertSame(null, $model->data);
+
+        // Low level test to assert database structure
+        $this->assertSame(['foo' => 'bar'], json_decode(DB::table('virtual_models')->where('id', $model->id)->first()->data, true));
+        $this->assertSame(null, DB::table('virtual_models')->where('id', $model->id)->first()->foo ?? null);
+
+        // Model has the correct structure when retrieved
+        $model = VirtualModel::first();
+        $this->assertSame('bar', $model->foo);
+        $this->assertSame('bar', $model->getOriginal('foo'));
+        $this->assertSame(null, $model->data);
+
+        // Model can be updated
+        $model->update([
+            'foo' => 'baz',
+            'abc' => 'xyz',
+        ]);
+
+        $this->assertSame('baz', $model->foo);
+        $this->assertSame('baz', $model->getOriginal('foo'));
+        $this->assertSame('xyz', $model->abc);
+        $this->assertSame('xyz', $model->getOriginal('abc'));
+        $this->assertSame(null, $model->data);
+
+        // Model can be retrieved after update & is structure correctly
+        $model = VirtualModel::first();
+
+        $this->assertSame('baz', $model->foo);
+        $this->assertSame('xyz', $model->abc);
+        $this->assertSame(null, $model->data);
+    }
+
+    /** @test */
     public function model_is_always_decoded_when_accessed_by_user_event()
     {
         MyModel::retrieved(function (MyModel $model) {
@@ -121,6 +164,24 @@ class MyModel extends Model
             'id',
             'custom1',
             'custom2',
+        ];
+    }
+}
+
+class VirtualModel extends Model
+{
+    use VirtualColumn;
+
+    protected $guarded = [];
+    public $timestamps = false;
+
+    public static function getVirtualColumns(): array
+    {
+        return [
+            'foo',
+            'abc',
+            'baz',
+            'xyz',
         ];
     }
 }

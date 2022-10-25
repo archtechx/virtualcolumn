@@ -45,7 +45,10 @@ trait VirtualColumn
         }
 
         foreach ($model->getAttributes() as $key => $value) {
-            if (! in_array($key, static::getCustomColumns())) {
+
+            if ((static::getVirtualColumns() && in_array($key, static::getVirtualColumns(), true))
+                || ! in_array($key, static::getCustomColumns())
+            ) {
                 $current = $model->getAttribute(static::getDataColumn()) ?? [];
 
                 $model->setAttribute(static::getDataColumn(), array_merge($current, [
@@ -131,6 +134,13 @@ trait VirtualColumn
     public static function getDataColumn(): string
     {
         return 'data';
+    }
+
+    public static function getVirtualColumns(): array
+    {
+        return [
+            //
+        ];
     }
 
     public static function getCustomColumns(): array
