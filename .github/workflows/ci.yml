@@ -14,13 +14,8 @@ jobs:
     name: Tests (PHPUnit) - L${{ matrix.laravel }}
 
     steps:
-      - name: Checkout code
+      - name: Install composer dependencies
         uses: actions/checkout@v2
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
 
       - name: Install dependencies
         run: composer require "laravel/framework:^${{matrix.laravel}}.0"
