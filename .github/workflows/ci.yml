@@ -8,18 +8,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ["7.3", "8.0", "8.1"]
         laravel: [6, 8, 9, 10]
-        include:
-          - laravel: "^9.0"
-            testbench: "^7.0"
-          - laravel: "^10.0"
-            testbench: "^8.0"
-        exclude:
-          - laravel: "^10.0"
-            php: "8.0"
-          - laravel: "^9.0"
-            php: "7.3"
+
 
     name: Tests (PHPUnit) - L${{ matrix.laravel }}
 
@@ -30,7 +20,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: '8.1'
 
       - name: Install dependencies
         run: composer require "laravel/framework:^${{matrix.laravel}}.0"
