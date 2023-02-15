@@ -9,7 +9,7 @@ jobs:
       fail-fast: true
       matrix:
         laravel: [6, 8, 9, 10]
-
+        php-versions: ['8.0', '8.1']
 
     name: Tests (PHPUnit) - L${{ matrix.laravel }}
 
@@ -20,7 +20,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: ${{ matrix.php-versions }}
 
       - name: Install dependencies
         run: composer require "laravel/framework:^${{matrix.laravel}}.0"
