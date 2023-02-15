@@ -32,7 +32,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: ${{matrix.php}}
 
       - name: Install dependencies
         run: composer require "laravel/framework:^${{matrix.laravel}}.0"
