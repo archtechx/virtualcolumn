@@ -2,7 +2,7 @@
 
 ## Installation
 
-Supports Laravel 6, 7, 8, and 9.
+Supports Laravel 6, 7, 8, 9, and 10.
 
 ```
 composer require stancl/virtualcolumn
