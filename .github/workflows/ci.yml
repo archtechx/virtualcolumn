@@ -9,7 +9,12 @@ jobs:
       fail-fast: true
       matrix:
         laravel: [6, 8, 9, 10]
-
+        php: ["7.3", "8.0", "8.1"]
+        exclude:
+          - laravel: "^10.0"
+            php: "8.0"
+          - laravel: "^9.0"
+            php: "7.3"
 
     name: Tests (PHPUnit) - L${{ matrix.laravel }}
 
