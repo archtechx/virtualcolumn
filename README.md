@@ -2,7 +2,7 @@
 
 ## Installation
 
-Supports Laravel 6, 7, 8, and 9.
+Supports Laravel 9 and 10.
 
 ```
 composer require stancl/virtualcolumn
@@ -20,7 +20,7 @@ class MyModel extends Model
     use VirtualColumn;
 
     public $guarded = [];
-    
+
     public static function getCustomColumns(): array
     {
         return [
