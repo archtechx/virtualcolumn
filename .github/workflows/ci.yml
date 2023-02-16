@@ -9,10 +9,10 @@ jobs:
       fail-fast: true
       matrix:
         include:
-        - laravel: 10
-          php: 8.1
         - laravel: 9
           php: 8.0
+        - laravel: 10
+          php: 8.1
 
     name: Tests (PHPUnit) - L${{ matrix.laravel }}
 
