@@ -106,6 +106,19 @@ class VirtualColumnTest extends TestCase
     }
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
+
+    /** @test */
+    public function encrypted_casts_work_with_virtual_column() {
+        $model = MyModel::create(['password' => $password = 'foo']);
+
+        // Virtual column gets encrypted
+        // todo1 check what value actually got saved in $model->password (should be encrypted 'foo')
+
+        // Virtual column gets decrypted
+        $this->assertSame($model->password, $password);
+
+        // todo1 Check if *all* encrypted casts work
+    }
 }
 
 class MyModel extends Model
@@ -114,6 +127,9 @@ class MyModel extends Model
 
     protected $guarded = [];
     public $timestamps = false;
+    public $casts = [
+        'password'
+    ];
 
     public static function getCustomColumns(): array
     {
