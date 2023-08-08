@@ -15,6 +15,7 @@
   </testsuites>
   <php>
     <env name="APP_ENV" value="testing"/>
+    <env name="APP_KEY" value="base64:+osRhaqQtOcYM79fhVU8YdNBs/1iVJPWYUr9zvTPCs0="/>
     <env name="BCRYPT_ROUNDS" value="4"/>
     <env name="CACHE_DRIVER" value="redis"/>
     <env name="MAIL_DRIVER" value="array"/>
