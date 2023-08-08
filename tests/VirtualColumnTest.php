@@ -2,9 +2,10 @@
 
 namespace Stancl\VirtualColumn\Tests;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Orchestra\Testbench\TestCase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
 
 class VirtualColumnTest extends TestCase
@@ -112,7 +113,15 @@ class VirtualColumnTest extends TestCase
         $model = MyModel::create(['password' => $password = 'foo']);
 
         // Virtual column gets encrypted
-        // todo1 check what value actually got saved in $model->password (should be encrypted 'foo')
+        $rawEncryptedPassword = (array) DB::table('my_models')
+            ->select('data->password')
+            ->where('id', $model->id)
+            ->first();
+
+        $encryptedPassword = $rawEncryptedPassword[array_key_first((array) $rawEncryptedPassword)];
+
+        $this->assertNotSame($encryptedPassword, $password);
+        $this->assertSame(Crypt::decryptString($encryptedPassword), $password);
 
         // Virtual column gets decrypted
         $this->assertSame($model->password, $password);
@@ -128,7 +137,7 @@ class MyModel extends Model
     protected $guarded = [];
     public $timestamps = false;
     public $casts = [
-        'password'
+        'password' => 'encrypted'
     ];
 
     public static function getCustomColumns(): array

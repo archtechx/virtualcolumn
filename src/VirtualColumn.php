@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Stancl\VirtualColumn;
 
+use Illuminate\Support\Facades\Crypt;
+
 /**
  * This trait lets you add a "data" column functionality to any Eloquent model.
  * It serializes attributes which don't exist as columns on the model's table
@@ -31,6 +33,10 @@ trait VirtualColumn
         }
 
         foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
+            if ($model->hasCast($key, 'encrypted')) {
+                $value = Crypt::decryptString($value);
+            }
+
             $model->setAttribute($key, $value);
             $model->syncOriginalAttribute($key);
         }
