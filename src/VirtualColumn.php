@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Stancl\VirtualColumn;
 
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Crypt;
 
 /**
  * This trait lets you add a "data" column functionality to any Eloquent model.
