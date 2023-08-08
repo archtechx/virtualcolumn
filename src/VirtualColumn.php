@@ -37,7 +37,12 @@ trait VirtualColumn
         $defaultEncryptedCastables = ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'];
 
         foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
-            if ($model->hasCast($key, array_merge($defaultEncryptedCastables, static::$customEncryptedCastables)) && static::valueEncrypted($value)) {
+            $keyHasEncryptedCastable = $model->hasCast($key, array_merge(
+                $defaultEncryptedCastables,
+                array_map(fn (string $castable) => strtolower($castable), static::$customEncryptedCastables) // hasCast() only works correctly with lowercase strings
+            ));
+
+            if ($keyHasEncryptedCastable && static::valueEncrypted($value)) {
                 $model->attributes[$key] = $value;
             } else {
                 $model->setAttribute($key, $value);
