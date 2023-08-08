@@ -2,11 +2,12 @@
 
 namespace Stancl\VirtualColumn\Tests;
 
-use Stancl\VirtualColumn\Tests\Etc\EncryptedCast;
 use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class VirtualColumnTest extends TestCase
 {
@@ -183,5 +184,28 @@ class FooModel extends Model
     public static function getDataColumn(): string
     {
         return 'virtual';
+    }
+}
+
+class EncryptedCast implements CastsAttributes
+{
+    /**
+     * Cast the given value.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function get(Model $model, string $key, mixed $value, array $attributes): mixed
+    {
+        return Crypt::decryptString($value);
+    }
+
+    /**
+     * Prepare the given value for storage.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function set(Model $model, string $key, mixed $value, array $attributes): mixed
+    {
+        return Crypt::encryptString($value);
     }
 }
