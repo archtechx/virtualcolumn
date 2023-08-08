@@ -128,11 +128,11 @@ class VirtualColumnTest extends TestCase
             $savedValue = $model->getAttributes()[$key]; // Encrypted
 
             $this->assertTrue(MyModel::valueEncrypted($savedValue));
-            $this->assertNotEquals($savedValue, $expectedValue);
+            $this->assertNotEquals($expectedValue, $savedValue);
 
             $retrievedValue = $model->$key; // Decrypted
 
-            $this->assertEquals($retrievedValue, $expectedValue);
+            $this->assertEquals($expectedValue, $retrievedValue);
         }
 
         // Reset static property
