@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class VirtualColumnTest extends TestCase
 {
@@ -110,23 +111,32 @@ class VirtualColumnTest extends TestCase
 
     /** @test */
     public function encrypted_casts_work_with_virtual_column() {
-        $model = MyModel::create(['password' => $password = 'foo']);
+        $model = MyModel::create([
+            'password' => $password = 'foo',
+            'array' => $array = ['foo', 'bar'],
+            'collection' => $collection = collect(['foo', 'bar']),
+            'json' => $json = json_encode(['foo', 'bar']),
+            'object' => $object = (object) json_encode(['foo', 'bar']),
+            // todo1 'custom' => 'foo',
+        ]);
 
-        // Virtual column gets encrypted
-        $rawEncryptedPassword = (array) DB::table('my_models')
-            ->select('data->password')
-            ->where('id', $model->id)
-            ->first();
+        $attributeGetsCastCorrectly = function (string $attribute, mixed $expectedValue) use ($model): void {
+            $savedValue = $model->getAttributes()[$attribute]; // Encrypted
 
-        $encryptedPassword = $rawEncryptedPassword[array_key_first((array) $rawEncryptedPassword)];
+            $this->assertTrue(VirtualColumn::valueEncrypted($savedValue));
+            $this->assertNotEquals($savedValue, $expectedValue);
 
-        $this->assertNotSame($encryptedPassword, $password);
-        $this->assertSame(Crypt::decryptString($encryptedPassword), $password);
+            $retrievedValue = $model->$attribute; // Decrypted
 
-        // Virtual column gets decrypted
-        $this->assertSame($model->password, $password);
+            $this->assertEquals($retrievedValue, $expectedValue);
+        };
 
-        // todo1 Check if *all* encrypted casts work
+        $attributeGetsCastCorrectly('password', $password); // 'encrypted'
+        $attributeGetsCastCorrectly('array', $array); // 'encrypted:array'
+        $attributeGetsCastCorrectly('collection', $collection); // 'encrypted:collection'
+        $attributeGetsCastCorrectly('json', $json); // 'encrypted:json'
+        $attributeGetsCastCorrectly('object', $object); // 'encrypted:object'
+        // todo1 $attributeGetsCastCorrectly('custom', $custom); // 'CustomCast::class'
     }
 }
 
@@ -137,7 +147,12 @@ class MyModel extends Model
     protected $guarded = [];
     public $timestamps = false;
     public $casts = [
-        'password' => 'encrypted'
+        'password' => 'encrypted',
+        'array' => 'encrypted:array',
+        'collection' => 'encrypted:collection',
+        'json' => 'encrypted:json',
+        'object' => 'encrypted:object',
+        // todo1 'custom' => CustomCast::class,
     ];
 
     public static function getCustomColumns(): array
