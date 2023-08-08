@@ -2,12 +2,11 @@
 
 namespace Stancl\VirtualColumn\Tests;
 
+use Stancl\VirtualColumn\Tests\Etc\EncryptedCast;
 use Orchestra\Testbench\TestCase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
-use Illuminate\Contracts\Encryption\DecryptException;
 
 class VirtualColumnTest extends TestCase
 {
@@ -111,32 +110,32 @@ class VirtualColumnTest extends TestCase
 
     /** @test */
     public function encrypted_casts_work_with_virtual_column() {
-        $model = MyModel::create([
-            'password' => $password = 'foo',
-            'array' => $array = ['foo', 'bar'],
-            'collection' => $collection = collect(['foo', 'bar']),
-            'json' => $json = json_encode(['foo', 'bar']),
-            'object' => $object = (object) json_encode(['foo', 'bar']),
-            // todo1 'custom' => 'foo',
+        // Custom encrypted castables have to be specified in the $customEncryptedCastables static property
+        MyModel::$customEncryptedCastables = [EncryptedCast::class];
+
+        /** @var MyModel $model */
+        $model = MyModel::create($encryptedAttributes = [
+            'password' => 'foo', // 'encrypted'
+            'array' => ['foo', 'bar'], // 'encrypted:array'
+            'collection' => collect(['foo', 'bar']), // 'encrypted:collection'
+            'json' => json_encode(['foo', 'bar']), // 'encrypted:json'
+            'object' => (object) json_encode(['foo', 'bar']), // 'encrypted:object'
+            'custom' => 'foo', // Custom castable – 'EncryptedCast::class'
         ]);
 
-        $attributeGetsCastCorrectly = function (string $attribute, mixed $expectedValue) use ($model): void {
-            $savedValue = $model->getAttributes()[$attribute]; // Encrypted
+        foreach($encryptedAttributes as $key => $expectedValue) {
+            $savedValue = $model->getAttributes()[$key]; // Encrypted
 
-            $this->assertTrue(VirtualColumn::valueEncrypted($savedValue));
+            $this->assertTrue(MyModel::valueEncrypted($savedValue));
             $this->assertNotEquals($savedValue, $expectedValue);
 
-            $retrievedValue = $model->$attribute; // Decrypted
+            $retrievedValue = $model->$key; // Decrypted
 
             $this->assertEquals($retrievedValue, $expectedValue);
-        };
+        }
 
-        $attributeGetsCastCorrectly('password', $password); // 'encrypted'
-        $attributeGetsCastCorrectly('array', $array); // 'encrypted:array'
-        $attributeGetsCastCorrectly('collection', $collection); // 'encrypted:collection'
-        $attributeGetsCastCorrectly('json', $json); // 'encrypted:json'
-        $attributeGetsCastCorrectly('object', $object); // 'encrypted:object'
-        // todo1 $attributeGetsCastCorrectly('custom', $custom); // 'CustomCast::class'
+        // Reset static property
+        VirtualColumn::$customEncryptedCastables = [];
     }
 }
 
@@ -152,7 +151,7 @@ class MyModel extends Model
         'collection' => 'encrypted:collection',
         'json' => 'encrypted:json',
         'object' => 'encrypted:object',
-        // todo1 'custom' => CustomCast::class,
+        'custom' => EncryptedCast::class,
     ];
 
     public static function getCustomColumns(): array
