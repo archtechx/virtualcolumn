@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Stancl\VirtualColumn;
 
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 /**
  * This trait lets you add a "data" column functionality to any Eloquent model.
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Crypt;
 trait VirtualColumn
 {
     public static $afterListeners = [];
+    public static array $customEncryptedCastables = [];
 
     /**
      * We need this property, because both created & saved event listeners
@@ -32,12 +34,15 @@ trait VirtualColumn
             return;
         }
 
+        $defaultEncryptedCastables = ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'];
+
         foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
-            if ($model->hasCast($key, 'encrypted')) {
-                $value = Crypt::decryptString($value);
+            if ($model->hasCast($key, array_merge($defaultEncryptedCastables, static::$customEncryptedCastables)) && static::valueEncrypted($value)) {
+                $model->attributes[$key] = $value;
+            } else {
+                $model->setAttribute($key, $value);
             }
 
-            $model->setAttribute($key, $value);
             $model->syncOriginalAttribute($key);
         }
 
@@ -66,6 +71,17 @@ trait VirtualColumn
         }
 
         $model->dataEncodingStatus = 'encoded';
+    }
+
+    public static function valueEncrypted(string $value): bool
+    {
+        try {
+            Crypt::decryptString($value);
+
+            return true;
+        } catch (DecryptException $e) {
+            return false;
+        }
     }
 
     public static function bootVirtualColumn()
