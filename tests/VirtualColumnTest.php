@@ -111,7 +111,6 @@ class VirtualColumnTest extends TestCase
 
     /** @test */
     public function encrypted_casts_work_with_virtual_column() {
-        dd('LARAVEL VERSION', app()::VERSION);
         // Custom encrypted castables have to be specified in the $customEncryptedCastables static property
         MyModel::$customEncryptedCastables = [EncryptedCast::class];
 
