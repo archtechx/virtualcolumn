@@ -34,12 +34,15 @@ trait VirtualColumn
             return;
         }
 
-        $defaultEncryptedCastables = ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'];
+        $encryptedCastables = array_merge(
+            static::$customEncryptedCastables,
+            ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
+        );
 
         foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
-            $keyHasEncryptedCastable = ! empty(array_intersect($model->getCasts(), array_merge($defaultEncryptedCastables, static::$customEncryptedCastables)));
+            $attributeHasEncryptedCastable = in_array(data_get($model->getCasts(), $key), $encryptedCastables);
 
-            if ($keyHasEncryptedCastable && static::valueEncrypted($value)) {
+            if ($attributeHasEncryptedCastable && static::valueEncrypted($value)) {
                 $model->attributes[$key] = $value;
             } else {
                 $model->setAttribute($key, $value);
