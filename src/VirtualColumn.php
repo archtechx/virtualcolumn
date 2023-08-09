@@ -147,9 +147,11 @@ trait VirtualColumn
         static::$afterListeners[$event][] = $callback;
     }
 
-    public function getCasts(){return array_merge(parent::getCasts(), [
-            static::getDataColumn() => 'array',
-        ]);
+    public function getCasts()
+    {
+        return array_merge(parent::getCasts(), [
+                static::getDataColumn() => 'array',
+            ]);
     }
 
     /**
