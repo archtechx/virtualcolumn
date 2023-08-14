@@ -82,7 +82,7 @@ trait VirtualColumn
             Crypt::decryptString($value);
 
             return true;
-        } catch (DecryptException $e) {
+        } catch (DecryptException) {
             return false;
         }
     }
