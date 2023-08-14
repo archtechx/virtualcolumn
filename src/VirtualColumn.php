@@ -150,8 +150,8 @@ trait VirtualColumn
     public function getCasts()
     {
         return array_merge(parent::getCasts(), [
-                static::getDataColumn() => 'array',
-            ]);
+            static::getDataColumn() => 'array',
+        ]);
     }
 
     /**
