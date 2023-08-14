@@ -23,14 +23,12 @@ trait VirtualColumn
      * We need this property, because both created & saved event listeners
      * decode the data (to take precedence before other created & saved)
      * listeners, but we don't want the data to be decoded twice.
-     *
-     * @var string
      */
-    public $dataEncodingStatus = 'decoded';
+    public bool $dataEncoded = false;
 
     protected static function decodeVirtualColumn(self $model): void
     {
-        if ($model->dataEncodingStatus === 'decoded') {
+        if (! $model->dataEncoded) {
             return;
         }
 
@@ -53,12 +51,12 @@ trait VirtualColumn
 
         $model->setAttribute(static::getDataColumn(), null);
 
-        $model->dataEncodingStatus = 'decoded';
+        $model->dataEncoded = false;
     }
 
     protected static function encodeAttributes(self $model): void
     {
-        if ($model->dataEncodingStatus === 'encoded') {
+        if ($model->dataEncoded) {
             return;
         }
 
@@ -75,7 +73,7 @@ trait VirtualColumn
             }
         }
 
-        $model->dataEncodingStatus = 'encoded';
+        $model->dataEncoded = true;
     }
 
     public static function valueEncrypted(string $value): bool
@@ -93,7 +91,7 @@ trait VirtualColumn
     {
         static::registerAfterListener('retrieved', function ($model) {
             // We always decode after model retrieval.
-            $model->dataEncodingStatus = 'encoded';
+            $model->dataEncoded = true;
 
             static::decodeVirtualColumn($model);
         });
@@ -106,7 +104,7 @@ trait VirtualColumn
 
     protected function decodeIfEncoded()
     {
-        if ($this->dataEncodingStatus === 'encoded') {
+        if ($this->dataEncoded) {
             static::decodeVirtualColumn($this);
         }
     }

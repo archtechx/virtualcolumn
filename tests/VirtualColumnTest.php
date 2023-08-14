@@ -63,25 +63,25 @@ class VirtualColumnTest extends TestCase
     public function model_is_always_decoded_when_accessed_by_user_event()
     {
         MyModel::retrieved(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::saving(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::updating(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::creating(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::saved(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::updated(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::created(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
 
 
