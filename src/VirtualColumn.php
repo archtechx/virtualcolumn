@@ -60,18 +60,21 @@ trait VirtualColumn
             return;
         }
 
-        foreach ($model->getAttributes() as $key => $value) {
-            if (! in_array($key, static::getCustomColumns())) {
-                $current = $model->getAttribute(static::getDataColumn()) ?? [];
+        $dataColumn = static::getDataColumn();
+        $customColumns = static::getCustomColumns();
+        $attributes = array_filter($model->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
-                $model->setAttribute(static::getDataColumn(), array_merge($current, [
-                    $key => $value,
-                ]));
+        // Remove data column from the attributes
+        unset($attributes[$dataColumn]);
 
-                unset($model->attributes[$key]);
-                unset($model->original[$key]);
-            }
+        foreach ($attributes as $key => $value) {
+            // Remove attribute from the model
+            unset($model->attributes[$key]);
+            unset($model->original[$key]);
         }
+
+        // Add attribute to the data column
+        $model->setAttribute($dataColumn, $attributes);
 
         $model->dataEncoded = true;
     }
