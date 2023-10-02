@@ -155,4 +155,15 @@ trait VirtualColumn
 
         return static::getDataColumn() . '->' . $column;
     }
+
+    /**
+     * Determine if the given column is a valid, guardable column.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    protected function isGuardableColumn($key)
+    {
+        return true;
+    }
 }
