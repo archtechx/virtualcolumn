@@ -61,7 +61,7 @@ trait VirtualColumn
         }
 
         $dataColumn = static::getDataColumn();
-        $customColumns = static::getCustomColumns();
+        $customColumns = $model->getCustomColumns();
         $attributes = array_filter($model->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
         // Remove data column from the attributes
