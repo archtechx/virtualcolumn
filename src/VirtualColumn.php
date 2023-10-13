@@ -33,14 +33,14 @@ trait VirtualColumn
         }
 
         $encryptedCastables = array_merge(
-            static::$customEncryptedCastables,
+            $model::$customEncryptedCastables,
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
+        foreach ($model->getAttribute($model->getDataColumn()) ?? [] as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($model->getCasts(), $key), $encryptedCastables);
 
-            if ($attributeHasEncryptedCastable && static::valueEncrypted($value)) {
+            if ($attributeHasEncryptedCastable && $model->valueEncrypted($value)) {
                 $model->attributes[$key] = $value;
             } else {
                 $model->setAttribute($key, $value);
@@ -49,7 +49,7 @@ trait VirtualColumn
             $model->syncOriginalAttribute($key);
         }
 
-        $model->setAttribute(static::getDataColumn(), null);
+        $model->setAttribute($model->getDataColumn(), null);
 
         $model->dataEncoded = false;
     }
@@ -60,7 +60,7 @@ trait VirtualColumn
             return;
         }
 
-        $dataColumn = static::getDataColumn();
+        $dataColumn = $model->getDataColumn();
         $customColumns = $model->getCustomColumns();
         $attributes = array_filter($model->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
