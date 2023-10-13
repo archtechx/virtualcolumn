@@ -136,7 +136,7 @@ class VirtualColumnTest extends TestCase
         }
 
         // Reset static property
-        VirtualColumn::$customEncryptedCastables = [];
+        MyModel::$customEncryptedCastables = [];
     }
 }
 
