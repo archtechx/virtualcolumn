@@ -127,7 +127,7 @@ class VirtualColumnTest extends TestCase
         foreach($encryptedAttributes as $key => $expectedValue) {
             $savedValue = $model->getAttributes()[$key]; // Encrypted
 
-            $this->assertTrue(MyModel::valueEncrypted($savedValue));
+            $this->assertTrue($model->valueEncrypted($savedValue));
             $this->assertNotEquals($expectedValue, $savedValue);
 
             $retrievedValue = $model->$key; // Decrypted
