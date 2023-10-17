@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Crypt;
  */
 trait VirtualColumn
 {
-    public static $afterListeners = [];
     public static array $customEncryptedCastables = [];
 
     /**
@@ -26,7 +25,7 @@ trait VirtualColumn
      */
     public bool $dataEncoded = false;
 
-    protected static function decodeVirtualColumn(self $model): void
+    protected function decodeVirtualColumn(self $model): void
     {
         if (! $model->dataEncoded) {
             return;
@@ -37,10 +36,10 @@ trait VirtualColumn
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
+        foreach ($model->getAttribute($this->getDataColumn()) ?? [] as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($model->getCasts(), $key), $encryptedCastables);
 
-            if ($attributeHasEncryptedCastable && static::valueEncrypted($value)) {
+            if ($attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
                 $model->attributes[$key] = $value;
             } else {
                 $model->setAttribute($key, $value);
@@ -49,19 +48,19 @@ trait VirtualColumn
             $model->syncOriginalAttribute($key);
         }
 
-        $model->setAttribute(static::getDataColumn(), null);
+        $model->setAttribute($this->getDataColumn(), null);
 
         $model->dataEncoded = false;
     }
 
-    protected static function encodeAttributes(self $model): void
+    protected function encodeAttributes(self $model): void
     {
         if ($model->dataEncoded) {
             return;
         }
 
-        $dataColumn = static::getDataColumn();
-        $customColumns = static::getCustomColumns();
+        $dataColumn = $this->getDataColumn();
+        $customColumns = $this->getCustomColumns();
         $attributes = array_filter($model->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
         // Remove data column from the attributes
@@ -79,7 +78,7 @@ trait VirtualColumn
         $model->dataEncoded = true;
     }
 
-    public static function valueEncrypted(string $value): bool
+    public function valueEncrypted(string $value): bool
     {
         try {
             Crypt::decryptString($value);
@@ -90,11 +89,11 @@ trait VirtualColumn
         }
     }
 
-    protected static function decodeAttributes(self $model)
+    protected function decodeAttributes(self $model)
     {
         $model->dataEncoded = true;
 
-        static::decodeVirtualColumn($model);
+        $this->decodeVirtualColumn($model);
     }
 
     protected function getAfterListeners(): array
@@ -123,7 +122,7 @@ trait VirtualColumn
     protected function decodeIfEncoded()
     {
         if ($this->dataEncoded) {
-            static::decodeVirtualColumn($this);
+            $this->decodeVirtualColumn($this);
         }
     }
 
@@ -158,27 +157,22 @@ trait VirtualColumn
         }
     }
 
-    public static function registerAfterListener(string $event, callable $callback)
-    {
-        static::$afterListeners[$event][] = $callback;
-    }
-
     public function getCasts()
     {
         return array_merge(parent::getCasts(), [
-            static::getDataColumn() => 'array',
+            $this->getDataColumn() => 'array',
         ]);
     }
 
     /**
      * Get the name of the column that stores additional data.
      */
-    public static function getDataColumn(): string
+    public function getDataColumn(): string
     {
         return 'data';
     }
 
-    public static function getCustomColumns(): array
+    public function getCustomColumns(): array
     {
         return [
             'id',
@@ -192,10 +186,10 @@ trait VirtualColumn
      */
     public function getColumnForQuery(string $column): string
     {
-        if (in_array($column, static::getCustomColumns(), true)) {
+        if (in_array($column, $this->getCustomColumns(), true)) {
             return $column;
         }
 
-        return static::getDataColumn() . '->' . $column;
+        return $this->getDataColumn() . '->' . $column;
     }
 }
