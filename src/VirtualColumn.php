@@ -97,19 +97,27 @@ trait VirtualColumn
         static::decodeVirtualColumn($model);
     }
 
-    public static function bootVirtualColumn()
+    protected function getAfterListeners(): array
     {
-        static::registerAfterListener('retrieved', function ($model) {
-            // We always decode after model retrieval.
+        return [
+            'retrieved' => [
+                function ($model) {
+                    // Always decode after model retrieval
             $model->dataEncoded = true;
 
-            static::decodeVirtualColumn($model);
-        });
-
-        // Encode if writing
-        static::registerAfterListener('saving', [static::class, 'encodeAttributes']);
-        static::registerAfterListener('creating', [static::class, 'encodeAttributes']);
-        static::registerAfterListener('updating', [static::class, 'encodeAttributes']);
+                    $this->decodeVirtualColumn($model);
+                }
+            ],
+            'saving' => [
+                [$this, 'encodeAttributes']
+            ],
+            'creating' => [
+                [$this, 'encodeAttributes']
+            ],
+            'updating' => [
+                [$this, 'encodeAttributes']
+            ],
+        ];
     }
 
     protected function decodeIfEncoded()
@@ -132,11 +140,7 @@ trait VirtualColumn
 
     public function runAfterListeners($event, $halt = true)
     {
-        $listeners = static::$afterListeners[$event] ?? [];
-
-        // $listeners = array_filter(static::$afterListeners[$event] ?? [], function ($listener) {
-        //     return $listener[0] === static::class;
-        // });
+        $listeners = $this->getAfterListeners()[$event] ?? [];
 
         if (! $event) {
             return;
