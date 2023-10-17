@@ -103,19 +103,19 @@ trait VirtualColumn
             'retrieved' => [
                 function ($model) {
                     // Always decode after model retrieval
-            $model->dataEncoded = true;
+                    $model->dataEncoded = true;
 
                     $this->decodeVirtualColumn($model);
-                }
+                },
             ],
             'saving' => [
-                [$this, 'encodeAttributes']
+                [$this, 'encodeAttributes'],
             ],
             'creating' => [
-                [$this, 'encodeAttributes']
+                [$this, 'encodeAttributes'],
             ],
             'updating' => [
-                [$this, 'encodeAttributes']
+                [$this, 'encodeAttributes'],
             ],
         ];
     }
