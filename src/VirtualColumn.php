@@ -33,14 +33,14 @@ trait VirtualColumn
         }
 
         $encryptedCastables = array_merge(
-            $model::$customEncryptedCastables,
+            static::$customEncryptedCastables,
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        foreach ($model->getAttribute($model->getDataColumn()) ?? [] as $key => $value) {
+        foreach ($model->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($model->getCasts(), $key), $encryptedCastables);
 
-            if ($attributeHasEncryptedCastable && $model->valueEncrypted($value)) {
+            if ($attributeHasEncryptedCastable && static::valueEncrypted($value)) {
                 $model->attributes[$key] = $value;
             } else {
                 $model->setAttribute($key, $value);
@@ -49,7 +49,7 @@ trait VirtualColumn
             $model->syncOriginalAttribute($key);
         }
 
-        $model->setAttribute($model->getDataColumn(), null);
+        $model->setAttribute(static::getDataColumn(), null);
 
         $model->dataEncoded = false;
     }
@@ -60,8 +60,8 @@ trait VirtualColumn
             return;
         }
 
-        $dataColumn = $model->getDataColumn();
-        $customColumns = $model->getCustomColumns();
+        $dataColumn = static::getDataColumn();
+        $customColumns = static::getCustomColumns();
         $attributes = array_filter($model->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
         // Remove data column from the attributes
@@ -88,6 +88,13 @@ trait VirtualColumn
         } catch (DecryptException) {
             return false;
         }
+    }
+
+    protected static function decodeAttributes(self $model)
+    {
+        $model->dataEncoded = true;
+
+        static::decodeVirtualColumn($model);
     }
 
     public static function bootVirtualColumn()
@@ -126,6 +133,10 @@ trait VirtualColumn
     public function runAfterListeners($event, $halt = true)
     {
         $listeners = static::$afterListeners[$event] ?? [];
+
+        // $listeners = array_filter(static::$afterListeners[$event] ?? [], function ($listener) {
+        //     return $listener[0] === static::class;
+        // });
 
         if (! $event) {
             return;
