@@ -140,22 +140,14 @@ class VirtualColumnTest extends TestCase
     }
 }
 
-class MyModel extends Model
+class ParentModel extends Model
 {
     use VirtualColumn;
 
     protected $guarded = [];
     public $timestamps = false;
-    public $casts = [
-        'password' => 'encrypted',
-        'array' => 'encrypted:array',
-        'collection' => 'encrypted:collection',
-        'json' => 'encrypted:json',
-        'object' => 'encrypted:object',
-        'custom' => EncryptedCast::class,
-    ];
 
-    public static function getCustomColumns(): array
+    public function getCustomColumns(): array
     {
         return [
             'id',
@@ -165,23 +157,21 @@ class MyModel extends Model
     }
 }
 
-class FooModel extends Model
+class MyModel extends ParentModel
 {
-    use VirtualColumn;
+    public $casts = [
+        'password' => 'encrypted',
+        'array' => 'encrypted:array',
+        'collection' => 'encrypted:collection',
+        'json' => 'encrypted:json',
+        'object' => 'encrypted:object',
+        'custom' => EncryptedCast::class,
+    ];
+}
 
-    protected $guarded = [];
-    public $timestamps = false;
-
-    public static function getCustomColumns(): array
-    {
-        return [
-            'id',
-            'custom1',
-            'custom2',
-        ];
-    }
-
-    public static function getDataColumn(): string
+class FooModel extends ParentModel
+{
+    public function getDataColumn(): string
     {
         return 'virtual';
     }
