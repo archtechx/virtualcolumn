@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Crypt;
  */
 trait VirtualColumn
 {
+    /**
+     * Encrypted castables have to be handled using a special approach that prevents the data from getting encrypted repeatedly.
+     *
+     * The default encrypted castables ('encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object')
+     * are already handled, so you can use this array to add your own encrypted castables.
+     */
     public static array $customEncryptedCastables = [];
 
     /**
