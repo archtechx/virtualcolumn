@@ -2,6 +2,7 @@
 
 namespace Stancl\VirtualColumn\Tests;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Orchestra\Testbench\TestCase;
@@ -105,6 +106,23 @@ class VirtualColumnTest extends TestCase
         $this->assertSame($virtualColumnName, $model->getColumnForQuery('foo'));
     }
 
+    /** @test */
+    public function multiple_classes_cannot_extend_a_parent_that_uses_virtualcolumn()
+    {
+
+        // Create a model that extends a parent using VirtualColumn
+        FirstChildModel::create(['custom1' => 'foo model', 'foo' => 'foo']);
+
+        // Expect creating a model that extends the same parent using VirtualColumn
+        // Not to work correctly
+        $this->expectException(Exception::class);
+
+        // Try creating a model that extends the same parent
+        SecondChildModel::create(['custom1' => 'bar', 'bar' => 'custom property']);
+    }
+
+
+
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 }
 
@@ -144,5 +162,53 @@ class FooModel extends Model
     public static function getDataColumn(): string
     {
         return 'virtual';
+    }
+}
+
+class ParentModel extends Model
+{
+    use VirtualColumn;
+
+    public $table = 'foo_models';
+
+    protected $guarded = [];
+    public $timestamps = false;
+
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'custom1',
+            'custom2',
+        ];
+    }
+
+    public static function getDataColumn(): string
+    {
+        return 'virtual';
+    }
+}
+
+
+class FirstChildModel extends ParentModel
+{
+}
+class SecondChildModel extends ParentModel
+{
+    public $table = 'bar_models';
+    protected $guarded = [];
+    public $timestamps = false;
+
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'custom1',
+        ];
+    }
+
+    public static function getDataColumn(): string
+    {
+        return 'data';
     }
 }
