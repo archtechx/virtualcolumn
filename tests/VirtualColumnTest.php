@@ -106,10 +106,8 @@ class VirtualColumnTest extends TestCase
     }
 
     /** @test */
-    public function models_extending_a_parent_using_virtualcolumn_get_encoded_incorrectly()
+    public function models_extending_a_parent_model_using_virtualcolumn_get_encoded_correctly()
     {
-        // todo1 Fix this unintended behavior
-
         // Create a model that extends a parent model using VirtualColumn
         // 'foo' is a custom column, 'data' is the virtual column
         FooChild::create(['foo' => 'foo']);
@@ -118,35 +116,13 @@ class VirtualColumnTest extends TestCase
         $this->assertNull($encodedFoo->data);
         $this->assertSame($encodedFoo->foo, 'foo');
 
-        // Creating another child model of the same parent doesn't encode the attributes correctly
+        // Create another child model of the same parent
         // 'bar' is a custom column, 'data' is the virtual column
         BarChild::create(['bar' => 'bar']);
         $encodedBar = DB::select('select * from bar_childs limit 1')[0];
 
-        /*
-         * Each child model gets encoded using the first child model's encoding listener.
-         * The encodeAttributes event listeners get registered for each child model
-         * in $afterListeners – a static property, so the state is shared between all child models.
-         *
-         * The runAfterListeners method runs all listeners for the registered event,
-         * including the listener for encoding the first child model before attempting to encode the second child.
-         *
-         * However, after encoding the second child model's attributes using the first listener,
-         * $dataEncodingStatus changes to 'encoded', meaning the next listener (the one intended for the second child)
-         * won't encode the attributes.
-         *
-         * That results in the second child model being encoded using the first child model's custom columns,
-         * and the second child model's custom columns won't be recognized as "real"/custom columns.
-         *
-         * The intended behavior would be
-         * $this->assertNull($encodedBar->data);
-         * $this->assertSame($encodedBar->bar, 'bar');
-         */
-
-        // Assert that the second child model was encoded incorrectly
-        $this->assertNotNull($encodedBar->data);
-        $this->assertNull($encodedBar->bar);
-        $this->assertSame($encodedBar->data, json_encode(['bar' => 'bar']));
+        $this->assertNull($encodedBar->data);
+        $this->assertSame($encodedBar->bar, 'bar');
     }
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
