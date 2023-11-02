@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateBarModelsTable extends Migration
+class CreateFooChildsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -15,10 +15,10 @@ class CreateBarModelsTable extends Migration
      */
     public function up()
     {
-        Schema::create('bar_models', function (Blueprint $table) {
+        Schema::create('foo_childs', function (Blueprint $table) {
             $table->increments('id');
 
-            $table->string('custom1');
+            $table->string('foo')->nullable();
 
             $table->json('data')->nullable();
         });
@@ -26,6 +26,6 @@ class CreateBarModelsTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('bar_models');
+        Schema::dropIfExists('foo_childs');
     }
 }
