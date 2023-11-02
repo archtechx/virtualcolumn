@@ -107,21 +107,48 @@ class VirtualColumnTest extends TestCase
     }
 
     /** @test */
-    public function multiple_classes_cannot_extend_a_parent_that_uses_virtualcolumn()
+    public function models_extending_a_parent_using_virtualcolumn_get_encoded_incorrectly()
     {
+        // todo1 Fix this unintended behavior
 
-        // Create a model that extends a parent using VirtualColumn
-        FirstChildModel::create(['custom1' => 'foo model', 'foo' => 'foo']);
+        // Create a model that extends a parent model using VirtualColumn
+        // 'foo' is a custom column, 'data' is the virtual column
+        FooChild::create(['foo' => 'foo']);
+        $encodedFoo = DB::select('select * from foo_childs limit 1')[0];
+        // Assert that the model was encoded correctly
+        $this->assertNull($encodedFoo->data);
+        $this->assertSame($encodedFoo->foo, 'foo');
 
-        // Expect creating a model that extends the same parent using VirtualColumn
-        // Not to work correctly
-        $this->expectException(Exception::class);
+        // Creating another child model of the same parent doesn't encode the attributes correctly
+        // 'bar' is a custom column, 'data' is the virtual column
+        BarChild::create(['bar' => 'bar']);
+        $encodedBar = DB::select('select * from bar_childs limit 1')[0];
 
-        // Try creating a model that extends the same parent
-        SecondChildModel::create(['custom1' => 'bar', 'bar' => 'custom property']);
+        /*
+         * Each child model gets encoded using the first child model's encoding listener.
+         * The encodeAttributes event listeners get registered for each child model
+         * in $afterListeners – a static property, so the state is shared between all child models.
+         *
+         * The runAfterListeners method runs all listeners for the registered event,
+         * including the listener for encoding the first child model before attempting to encode the second child.
+         *
+         * However, after encoding the second child model's attributes using the first listener,
+         * $dataEncodingStatus changes to 'encoded', meaning the next listener (the one intended for the second child)
+         * won't encode the attributes.
+         *
+         * That results in the second child model being encoded using the first child model's custom columns,
+         * and the second child model's custom columns won't be recognized as "real"/custom columns.
+         *
+         * The intended behavior would be
+         * $this->assertNull($encodedBar->data);
+         * $this->assertSame($encodedBar->bar, 'bar');
+         */
+
+        // Assert that the second child model was encoded incorrectly
+        $this->assertNotNull($encodedBar->data);
+        $this->assertNull($encodedBar->bar);
+        $this->assertSame($encodedBar->data, json_encode(['bar' => 'bar']));
     }
-
-
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 }
@@ -169,46 +196,32 @@ class ParentModel extends Model
 {
     use VirtualColumn;
 
-    public $table = 'foo_models';
-
-    protected $guarded = [];
     public $timestamps = false;
+    protected $guarded = [];
+}
+
+
+class FooChild extends ParentModel
+{
+    public $table = 'foo_childs';
 
     public static function getCustomColumns(): array
     {
         return [
             'id',
-            'custom1',
-            'custom2',
+            'foo',
         ];
     }
-
-    public static function getDataColumn(): string
-    {
-        return 'virtual';
-    }
 }
-
-
-class FirstChildModel extends ParentModel
+class BarChild extends ParentModel
 {
-}
-class SecondChildModel extends ParentModel
-{
-    public $table = 'bar_models';
-    protected $guarded = [];
-    public $timestamps = false;
+    public $table = 'bar_childs';
 
     public static function getCustomColumns(): array
     {
         return [
             'id',
-            'custom1',
+            'bar',
         ];
-    }
-
-    public static function getDataColumn(): string
-    {
-        return 'data';
     }
 }
