@@ -2,7 +2,6 @@
 
 namespace Stancl\VirtualColumn\Tests;
 
-use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Orchestra\Testbench\TestCase;
