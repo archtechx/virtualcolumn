@@ -105,6 +105,26 @@ class VirtualColumnTest extends TestCase
         $this->assertSame($virtualColumnName, $model->getColumnForQuery('foo'));
     }
 
+    /** @test */
+    public function models_extending_a_parent_model_using_virtualcolumn_get_encoded_correctly()
+    {
+        // Create a model that extends a parent model using VirtualColumn
+        // 'foo' is a custom column, 'data' is the virtual column
+        FooChild::create(['foo' => 'foo']);
+        $encodedFoo = DB::select('select * from foo_childs limit 1')[0];
+        // Assert that the model was encoded correctly
+        $this->assertNull($encodedFoo->data);
+        $this->assertSame($encodedFoo->foo, 'foo');
+
+        // Create another child model of the same parent
+        // 'bar' is a custom column, 'data' is the virtual column
+        BarChild::create(['bar' => 'bar']);
+        $encodedBar = DB::select('select * from bar_childs limit 1')[0];
+
+        $this->assertNull($encodedBar->data);
+        $this->assertSame($encodedBar->bar, 'bar');
+    }
+
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 }
 
@@ -144,5 +164,39 @@ class FooModel extends Model
     public static function getDataColumn(): string
     {
         return 'virtual';
+    }
+}
+
+class ParentModel extends Model
+{
+    use VirtualColumn;
+
+    public $timestamps = false;
+    protected $guarded = [];
+}
+
+
+class FooChild extends ParentModel
+{
+    public $table = 'foo_childs';
+
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'foo',
+        ];
+    }
+}
+class BarChild extends ParentModel
+{
+    public $table = 'bar_childs';
+
+    public static function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'bar',
+        ];
     }
 }
