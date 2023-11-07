@@ -183,6 +183,15 @@ class MyModel extends ParentModel
 
 class FooModel extends ParentModel
 {
+    public function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'custom1',
+            'custom2',
+        ];
+    }
+
     public function getDataColumn(): string
     {
         return 'virtual';
