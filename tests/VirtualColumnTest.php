@@ -114,8 +114,9 @@ class VirtualColumnTest extends TestCase
         // 'foo' is a custom column, 'data' is the virtual column
         FooChild::create(['foo' => 'foo']);
         $encodedFoo = DB::select('select * from foo_childs limit 1')[0];
+
         // Assert that the model was encoded correctly
-        $this->assertNull($encodedFoo->data);
+        $this->assertSame($encodedFoo->data, '[]');
         $this->assertSame($encodedFoo->foo, 'foo');
 
         // Create another child model of the same parent
@@ -123,7 +124,7 @@ class VirtualColumnTest extends TestCase
         BarChild::create(['bar' => 'bar']);
         $encodedBar = DB::select('select * from bar_childs limit 1')[0];
 
-        $this->assertNull($encodedBar->data);
+        $this->assertSame($encodedBar->data, '[]');
         $this->assertSame($encodedBar->bar, 'bar');
     }
 
@@ -164,17 +165,8 @@ class ParentModel extends Model
 {
     use VirtualColumn;
 
-    protected $guarded = [];
     public $timestamps = false;
-
-    public function getCustomColumns(): array
-    {
-        return [
-            'id',
-            'custom1',
-            'custom2',
-        ];
-    }
+    protected $guarded = [];
 }
 
 class MyModel extends ParentModel
@@ -210,20 +202,11 @@ class EncryptedCast implements CastsAttributes
     }
 }
 
-class ParentModel extends Model
-{
-    use VirtualColumn;
-
-    public $timestamps = false;
-    protected $guarded = [];
-}
-
-
 class FooChild extends ParentModel
 {
     public $table = 'foo_childs';
 
-    public static function getCustomColumns(): array
+    public function getCustomColumns(): array
     {
         return [
             'id',
@@ -235,7 +218,7 @@ class BarChild extends ParentModel
 {
     public $table = 'bar_childs';
 
-    public static function getCustomColumns(): array
+    public function getCustomColumns(): array
     {
         return [
             'id',
