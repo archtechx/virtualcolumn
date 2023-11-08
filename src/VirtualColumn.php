@@ -31,9 +31,9 @@ trait VirtualColumn
      */
     public bool $dataEncoded = false;
 
-    protected function decodeVirtualColumn(self $model): void
+    protected function decodeVirtualColumn(): void
     {
-        if (! $model->dataEncoded) {
+        if (! $this->dataEncoded) {
             return;
         }
 
@@ -42,46 +42,46 @@ trait VirtualColumn
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        foreach ($model->getAttribute($this->getDataColumn()) ?? [] as $key => $value) {
-            $attributeHasEncryptedCastable = in_array(data_get($model->getCasts(), $key), $encryptedCastables);
+        foreach ($this->getAttribute($this->getDataColumn()) ?? [] as $key => $value) {
+            $attributeHasEncryptedCastable = in_array(data_get($this->getCasts(), $key), $encryptedCastables);
 
             if ($attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
-                $model->attributes[$key] = $value;
+                $this->attributes[$key] = $value;
             } else {
-                $model->setAttribute($key, $value);
+                $this->setAttribute($key, $value);
             }
 
-            $model->syncOriginalAttribute($key);
+            $this->syncOriginalAttribute($key);
         }
 
-        $model->setAttribute($this->getDataColumn(), null);
+        $this->setAttribute($this->getDataColumn(), null);
 
-        $model->dataEncoded = false;
+        $this->dataEncoded = false;
     }
 
-    protected function encodeAttributes(self $model): void
+    protected function encodeAttributes(): void
     {
-        if ($model->dataEncoded) {
+        if ($this->dataEncoded) {
             return;
         }
 
         $dataColumn = $this->getDataColumn();
         $customColumns = $this->getCustomColumns();
-        $attributes = array_filter($model->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
+        $attributes = array_filter($this->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
         // Remove data column from the attributes
         unset($attributes[$dataColumn]);
 
         foreach ($attributes as $key => $value) {
             // Remove attribute from the model
-            unset($model->attributes[$key]);
-            unset($model->original[$key]);
+            unset($this->attributes[$key]);
+            unset($this->original[$key]);
         }
 
         // Add attribute to the data column
-        $model->setAttribute($dataColumn, $attributes);
+        $this->setAttribute($dataColumn, $attributes);
 
-        $model->dataEncoded = true;
+        $this->dataEncoded = true;
     }
 
     public function valueEncrypted(string $value): bool
@@ -95,22 +95,22 @@ trait VirtualColumn
         }
     }
 
-    protected function decodeAttributes(self $model)
+    protected function decodeAttributes()
     {
-        $model->dataEncoded = true;
+        $this->dataEncoded = true;
 
-        $this->decodeVirtualColumn($model);
+        $this->decodeVirtualColumn();
     }
 
     protected function getAfterListeners(): array
     {
         return [
             'retrieved' => [
-                function ($model) {
+                function () {
                     // Always decode after model retrieval
-                    $model->dataEncoded = true;
+                    $this->dataEncoded = true;
 
-                    $this->decodeVirtualColumn($model);
+                    $this->decodeVirtualColumn();
                 },
             ],
             'saving' => [
@@ -128,7 +128,7 @@ trait VirtualColumn
     protected function decodeIfEncoded()
     {
         if ($this->dataEncoded) {
-            $this->decodeVirtualColumn($this);
+            $this->decodeVirtualColumn();
         }
     }
 
