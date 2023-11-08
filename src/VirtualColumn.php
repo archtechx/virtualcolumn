@@ -42,7 +42,7 @@ trait VirtualColumn
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        foreach ($this->getAttribute($this->getDataColumn()) ?? [] as $key => $value) {
+        foreach ($this->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($this->getCasts(), $key), $encryptedCastables);
 
             if ($attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
@@ -54,7 +54,7 @@ trait VirtualColumn
             $this->syncOriginalAttribute($key);
         }
 
-        $this->setAttribute($this->getDataColumn(), null);
+        $this->setAttribute(static::getDataColumn(), null);
 
         $this->dataEncoded = false;
     }
@@ -65,8 +65,8 @@ trait VirtualColumn
             return;
         }
 
-        $dataColumn = $this->getDataColumn();
-        $customColumns = $this->getCustomColumns();
+        $dataColumn = static::getDataColumn();
+        $customColumns = static::getCustomColumns();
         $attributes = array_filter($this->getAttributes(), fn ($key) => ! in_array($key, $customColumns), ARRAY_FILTER_USE_KEY);
 
         // Remove data column from the attributes
@@ -166,19 +166,19 @@ trait VirtualColumn
     public function getCasts()
     {
         return array_merge(parent::getCasts(), [
-            $this->getDataColumn() => 'array',
+            static::getDataColumn() => 'array',
         ]);
     }
 
     /**
      * Get the name of the column that stores additional data.
      */
-    public function getDataColumn(): string
+    public static function getDataColumn(): string
     {
         return 'data';
     }
 
-    public function getCustomColumns(): array
+    public static function getCustomColumns(): array
     {
         return [
             'id',
@@ -192,10 +192,10 @@ trait VirtualColumn
      */
     public function getColumnForQuery(string $column): string
     {
-        if (in_array($column, $this->getCustomColumns(), true)) {
+        if (in_array($column, static::getCustomColumns(), true)) {
             return $column;
         }
 
-        return $this->getDataColumn() . '->' . $column;
+        return static::getDataColumn() . '->' . $column;
     }
 }

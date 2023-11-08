@@ -183,7 +183,7 @@ class MyModel extends ParentModel
 
 class FooModel extends ParentModel
 {
-    public function getCustomColumns(): array
+    public static function getCustomColumns(): array
     {
         return [
             'id',
@@ -192,7 +192,7 @@ class FooModel extends ParentModel
         ];
     }
 
-    public function getDataColumn(): string
+    public static function getDataColumn(): string
     {
         return 'virtual';
     }
@@ -215,7 +215,7 @@ class FooChild extends ParentModel
 {
     public $table = 'foo_childs';
 
-    public function getCustomColumns(): array
+    public static function getCustomColumns(): array
     {
         return [
             'id',
@@ -227,7 +227,7 @@ class BarChild extends ParentModel
 {
     public $table = 'bar_childs';
 
-    public function getCustomColumns(): array
+    public static function getCustomColumns(): array
     {
         return [
             'id',
