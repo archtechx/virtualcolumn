@@ -2,10 +2,12 @@
 
 namespace Stancl\VirtualColumn\Tests;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Orchestra\Testbench\TestCase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class VirtualColumnTest extends TestCase
 {
@@ -49,7 +51,7 @@ class VirtualColumnTest extends TestCase
         $this->assertSame('xyz', $model->getOriginal('abc'));
         $this->assertSame(null, $model->data);
 
-        // Model can be retrieved after update & is structure correctly
+        // Model can be retrieved after update & is structured correctly
         $model = MyModel::first();
 
         $this->assertSame('baz', $model->foo);
@@ -61,25 +63,25 @@ class VirtualColumnTest extends TestCase
     public function model_is_always_decoded_when_accessed_by_user_event()
     {
         MyModel::retrieved(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::saving(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::updating(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::creating(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::saved(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::updated(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
         MyModel::created(function (MyModel $model) {
-            $this->assertSame('decoded', $model->dataEncodingStatus);
+            $this->assertFalse($model->dataEncoded);
         });
 
 
@@ -112,8 +114,9 @@ class VirtualColumnTest extends TestCase
         // 'foo' is a custom column, 'data' is the virtual column
         FooChild::create(['foo' => 'foo']);
         $encodedFoo = DB::select('select * from foo_childs limit 1')[0];
+
         // Assert that the model was encoded correctly
-        $this->assertNull($encodedFoo->data);
+        $this->assertSame($encodedFoo->data, '[]');
         $this->assertSame($encodedFoo->foo, 'foo');
 
         // Create another child model of the same parent
@@ -121,49 +124,40 @@ class VirtualColumnTest extends TestCase
         BarChild::create(['bar' => 'bar']);
         $encodedBar = DB::select('select * from bar_childs limit 1')[0];
 
-        $this->assertNull($encodedBar->data);
+        $this->assertSame($encodedBar->data, '[]');
         $this->assertSame($encodedBar->bar, 'bar');
     }
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
-}
 
-class MyModel extends Model
-{
-    use VirtualColumn;
+    /** @test */
+    public function encrypted_casts_work_with_virtual_column() {
+        // Custom encrypted castables have to be specified in the $customEncryptedCastables static property
+        MyModel::$customEncryptedCastables = [EncryptedCast::class];
 
-    protected $guarded = [];
-    public $timestamps = false;
+        /** @var MyModel $model */
+        $model = MyModel::create($encryptedAttributes = [
+            'password' => 'foo', // 'encrypted'
+            'array' => ['foo', 'bar'], // 'encrypted:array'
+            'collection' => collect(['foo', 'bar']), // 'encrypted:collection'
+            'json' => json_encode(['foo', 'bar']), // 'encrypted:json'
+            'object' => (object) json_encode(['foo', 'bar']), // 'encrypted:object'
+            'custom' => 'foo', // Custom castable – 'EncryptedCast::class'
+        ]);
 
-    public static function getCustomColumns(): array
-    {
-        return [
-            'id',
-            'custom1',
-            'custom2',
-        ];
-    }
-}
+        foreach($encryptedAttributes as $key => $expectedValue) {
+            $savedValue = $model->getAttributes()[$key]; // Encrypted
 
-class FooModel extends Model
-{
-    use VirtualColumn;
+            $this->assertTrue($model->valueEncrypted($savedValue));
+            $this->assertNotEquals($expectedValue, $savedValue);
 
-    protected $guarded = [];
-    public $timestamps = false;
+            $retrievedValue = $model->$key; // Decrypted
 
-    public static function getCustomColumns(): array
-    {
-        return [
-            'id',
-            'custom1',
-            'custom2',
-        ];
-    }
+            $this->assertEquals($expectedValue, $retrievedValue);
+        }
 
-    public static function getDataColumn(): string
-    {
-        return 'virtual';
+        // Reset static property
+        MyModel::$customEncryptedCastables = [];
     }
 }
 
@@ -175,12 +169,53 @@ class ParentModel extends Model
     protected $guarded = [];
 }
 
+class MyModel extends ParentModel
+{
+    public $casts = [
+        'password' => 'encrypted',
+        'array' => 'encrypted:array',
+        'collection' => 'encrypted:collection',
+        'json' => 'encrypted:json',
+        'object' => 'encrypted:object',
+        'custom' => EncryptedCast::class,
+    ];
+}
+
+class FooModel extends ParentModel
+{
+    public function getCustomColumns(): array
+    {
+        return [
+            'id',
+            'custom1',
+            'custom2',
+        ];
+    }
+
+    public function getDataColumn(): string
+    {
+        return 'virtual';
+    }
+}
+
+class EncryptedCast implements CastsAttributes
+{
+    public function get($model, $key, $value, $attributes)
+    {
+        return Crypt::decryptString($value);
+    }
+
+    public function set($model, $key, $value, $attributes)
+    {
+        return Crypt::encryptString($value);
+    }
+}
 
 class FooChild extends ParentModel
 {
     public $table = 'foo_childs';
 
-    public static function getCustomColumns(): array
+    public function getCustomColumns(): array
     {
         return [
             'id',
@@ -192,7 +227,7 @@ class BarChild extends ParentModel
 {
     public $table = 'bar_childs';
 
-    public static function getCustomColumns(): array
+    public function getCustomColumns(): array
     {
         return [
             'id',
