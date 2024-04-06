@@ -128,6 +128,20 @@ class VirtualColumnTest extends TestCase
         $this->assertSame($encodedBar->bar, 'bar');
     }
 
+    /** @test */
+    public function decoding_works_with_strict_mode_enabled() {
+        FooModel::shouldBeStrict();
+
+        FooModel::create([
+            'id' => 1,
+            'foo' => 'bar'
+        ]);
+
+        $id = FooModel::query()->pluck('id')->first();
+
+        $this->assertSame(1, $id);
+    }
+
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 
     /** @test */

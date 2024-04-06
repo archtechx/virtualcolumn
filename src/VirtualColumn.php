@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Stancl\VirtualColumn;
 
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\MissingAttributeException;
 use Illuminate\Support\Facades\Crypt;
 
 /**
@@ -42,7 +43,13 @@ trait VirtualColumn
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        foreach ($this->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
+        try {
+            $data = $this->getAttribute(static::getDataColumn()) ?? [];
+        } catch (MissingAttributeException) {
+            return;
+        }
+
+        foreach ($data as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($this->getCasts(), $key), $encryptedCastables);
 
             if ($attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
