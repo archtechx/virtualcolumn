@@ -45,7 +45,7 @@ trait VirtualColumn
         foreach ($this->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($this->getCasts(), $key), $encryptedCastables);
 
-            if ($attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
+            if ($value && $attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
                 $this->attributes[$key] = $value;
             } else {
                 $this->setAttribute($key, $value);
