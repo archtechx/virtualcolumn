@@ -143,13 +143,16 @@ class VirtualColumnTest extends TestCase
             'json' => json_encode(['foo', 'bar']), // 'encrypted:json'
             'object' => (object) json_encode(['foo', 'bar']), // 'encrypted:object'
             'custom' => 'foo', // Custom castable – 'EncryptedCast::class'
+            'null_value' => null, // 'encrypted'
         ]);
 
         foreach($encryptedAttributes as $key => $expectedValue) {
             $savedValue = $model->getAttributes()[$key]; // Encrypted
 
-            $this->assertTrue($model->valueEncrypted($savedValue));
-            $this->assertNotEquals($expectedValue, $savedValue);
+            if ($savedValue !== null) {
+                $this->assertTrue($model->valueEncrypted($savedValue));
+                $this->assertNotEquals($expectedValue, $savedValue);
+            }
 
             $retrievedValue = $model->$key; // Decrypted
 
@@ -178,6 +181,7 @@ class MyModel extends ParentModel
         'json' => 'encrypted:json',
         'object' => 'encrypted:object',
         'custom' => EncryptedCast::class,
+        'null_value' => 'encrypted',
     ];
 }
 
