@@ -129,6 +129,20 @@ class VirtualColumnTest extends TestCase
     }
 
     /** @test */
+    public function model_doesnt_overwrite_when_selectively_fetching() {
+        $this->expectExceptionMessage('Data column was not loaded from the database. Make sure the data column is selected in the query.');
+
+        FooModel::create([
+            'id' => 1,
+            'foo' => 'bar'
+        ]);
+
+        $foo = FooModel::query()->first(['id']);
+        $foo->bar = 'baz';
+        $foo->save();
+    }
+
+    /** @test */
     public function decoding_works_with_strict_mode_enabled() {
         FooModel::shouldBeStrict();
 

@@ -31,9 +31,11 @@ trait VirtualColumn
      */
     public bool $dataEncoded = false;
 
+    public bool $dataNotLoaded = false;
+
     protected function decodeVirtualColumn(): void
     {
-        if (! $this->dataEncoded) {
+        if (! $this->dataEncoded || ! $this->dataNotLoaded) {
             return;
         }
 
@@ -63,6 +65,10 @@ trait VirtualColumn
     {
         if ($this->dataEncoded) {
             return;
+        }
+
+        if ($this->dataNotLoaded) {
+            throw new \Exception('Data column was not loaded from the database. Make sure the data column is selected in the query.');
         }
 
         $dataColumn = static::getDataColumn();
@@ -107,11 +113,14 @@ trait VirtualColumn
         return [
             'retrieved' => [
                 function () {
+                    // If the data column wasn't retrieved, don't decode it
                     if (($this->attributes[static::getDataColumn()] ?? null) === null) {
+                        $this->dataNotLoaded = true;
+
                         return;
                     }
 
-                    // Always decode after model retrieval
+                    // Mark the data as encoded so that it doesn't get encoded again
                     $this->dataEncoded = true;
 
                     $this->decodeVirtualColumn();
