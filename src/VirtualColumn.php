@@ -43,13 +43,7 @@ trait VirtualColumn
             ['encrypted', 'encrypted:array', 'encrypted:collection', 'encrypted:json', 'encrypted:object'], // Default encrypted castables
         );
 
-        try {
-            $data = $this->getAttribute(static::getDataColumn()) ?? [];
-        } catch (MissingAttributeException) {
-            return;
-        }
-
-        foreach ($data as $key => $value) {
+        foreach ($this->getAttribute(static::getDataColumn()) ?? [] as $key => $value) {
             $attributeHasEncryptedCastable = in_array(data_get($this->getCasts(), $key), $encryptedCastables);
 
             if ($attributeHasEncryptedCastable && $this->valueEncrypted($value)) {
@@ -114,6 +108,10 @@ trait VirtualColumn
         return [
             'retrieved' => [
                 function () {
+                    if (($this->attributes[static::getDataColumn()] ?? null) === null) {
+                        return;
+                    }
+
                     // Always decode after model retrieval
                     $this->dataEncoded = true;
 
