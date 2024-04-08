@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Stancl\VirtualColumn;
 
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Database\Eloquent\MissingAttributeException;
 use Illuminate\Support\Facades\Crypt;
 
 /**
