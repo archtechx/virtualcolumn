@@ -128,6 +128,34 @@ class VirtualColumnTest extends TestCase
         $this->assertSame($encodedBar->bar, 'bar');
     }
 
+    /** @test */
+    public function model_doesnt_overwrite_when_selectively_fetching() {
+        $this->expectExceptionMessage('Data column was not loaded from the database. Make sure the data column is selected in the query.');
+
+        FooModel::create([
+            'id' => 1,
+            'foo' => 'bar'
+        ]);
+
+        $foo = FooModel::query()->first(['id']);
+        $foo->bar = 'baz';
+        $foo->save();
+    }
+
+    /** @test */
+    public function decoding_works_with_strict_mode_enabled() {
+        FooModel::shouldBeStrict();
+
+        FooModel::create([
+            'id' => 1,
+            'foo' => 'bar'
+        ]);
+
+        $id = FooModel::query()->pluck('id')->first();
+
+        $this->assertSame(1, $id);
+    }
+
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 
     /** @test */
