@@ -18,6 +18,8 @@ class CreateFooChildsTable extends Migration
         Schema::create('foo_childs', function (Blueprint $table) {
             $table->increments('id');
 
+            $table->unsignedInteger('foo_id')->nullable();
+
             $table->string('foo')->nullable();
 
             $table->json('data')->nullable();

@@ -76,6 +76,15 @@ trait VirtualColumn
             // Remove attribute from the model
             unset($this->attributes[$key]);
             unset($this->original[$key]);
+
+            // Check if the attribute is a method on the model
+            $myKeyIsAnFunction = method_exists($this, $key);
+
+            // If the attribute is a method, remove it from the attributes array
+            // This is to prevent the attribute from being added to the data column
+            if ($myKeyIsAnFunction) {
+                unset($attributes[$key]);
+            }
         }
 
         // Add attribute to the data column

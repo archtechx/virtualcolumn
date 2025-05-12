@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VirtualColumnTest extends TestCase
 {
@@ -162,6 +163,32 @@ class VirtualColumnTest extends TestCase
         // Reset static property
         MyModel::$customEncryptedCastables = [];
     }
+
+    /** @test */
+    public function test_try_save_property_same_name_as_function() {
+
+        /** @var FooModel $model */
+        $model = FooModel::create([
+            'custom1' => "bar",
+            'custom2' => 'ool',
+            'childrens' => [ // children are the name of the relation with FooChild
+                'custom' => 'abc'
+            ]
+        ]);
+
+        // After save, we should ignore the relationship as parameter
+        // To not throw an exception when trying to access the relation.
+        $this->assertTrue($model->childrens instanceof \Illuminate\Database\Eloquent\Collection);
+        $this->assertTrue($model->childrens() instanceof \Illuminate\Database\Eloquent\Relations\HasMany);
+
+        $model->childrens()->create([
+            'foo' => 'test'
+        ]);
+
+        // Double check after add a real foo child.
+        // Check if we dont get the error to call a eloquent method in array.
+        $this->assertTrue($model->childrens()->first() instanceof FooChild);
+    }
 }
 
 class ParentModel extends Model
@@ -200,6 +227,11 @@ class FooModel extends ParentModel
     {
         return 'virtual';
     }
+
+    public function childrens(): HasMany
+    {
+        return $this->hasMany(FooChild::class,  'foo_id');
+    }
 }
 
 class EncryptedCast implements CastsAttributes
@@ -223,6 +255,7 @@ class FooChild extends ParentModel
     {
         return [
             'id',
+            'foo_id',
             'foo',
         ];
     }
