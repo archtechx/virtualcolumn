@@ -18,8 +18,7 @@ class VirtualColumnTest extends TestCase
         $this->loadMigrationsFrom(__DIR__ . '/etc/migrations');
     }
 
-    /** @test */
-    public function keys_which_dont_have_their_own_column_go_into_data_json_column()
+    public function testKeysWhichDontHaveTheirOwnColumnGoIntoDataJsonColumn()
     {
         $model = MyModel::create([
             'foo' => 'bar',
@@ -59,8 +58,7 @@ class VirtualColumnTest extends TestCase
         $this->assertSame(null, $model->data);
     }
 
-    /** @test */
-    public function model_is_always_decoded_when_accessed_by_user_event()
+    public function testModelIsAlwaysDecodedWhenAccessedByUserEvent()
     {
         MyModel::retrieved(function (MyModel $model) {
             $this->assertFalse($model->dataEncoded);
@@ -90,8 +88,7 @@ class VirtualColumnTest extends TestCase
         MyModel::first();
     }
 
-    /** @test */
-    public function column_names_are_generated_correctly()
+    public function testColumnNamesAreGeneratedCorrectly()
     {
         // FooModel's virtual data column name is 'virtual'
         $virtualColumnName = 'virtual->foo';
@@ -107,8 +104,7 @@ class VirtualColumnTest extends TestCase
         $this->assertSame($virtualColumnName, $model->getColumnForQuery('foo'));
     }
 
-    /** @test */
-    public function models_extending_a_parent_model_using_virtualcolumn_get_encoded_correctly()
+    public function testModelsExtendingAParentModelUsingVirtualcolumnGetEncodedCorrectly()
     {
         // Create a model that extends a parent model using VirtualColumn
         // 'foo' is a custom column, 'data' is the virtual column
@@ -130,8 +126,7 @@ class VirtualColumnTest extends TestCase
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 
-    /** @test */
-    public function encrypted_casts_work_with_virtual_column() {
+    public function testEncryptedCastsWorkWithVirtualColumn() {
         // Custom encrypted castables have to be specified in the $customEncryptedCastables static property
         MyModel::$customEncryptedCastables = [EncryptedCast::class];
 
