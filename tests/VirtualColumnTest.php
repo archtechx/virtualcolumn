@@ -157,6 +157,28 @@ class VirtualColumnTest extends TestCase
         // Reset static property
         MyModel::$customEncryptedCastables = [];
     }
+
+    public function testUpdatingModelDoesNotStoreTimestampsInTheVirtualColumn() {
+        /** @var TimestampModel $model */
+        $model = TimestampModel::create();
+        $dbRecordDataColumn = fn () => DB::selectOne('select * from timestamp_models where id = ?', [$model->id])->data;
+
+        $this->assertStringNotContainsString('created_at', $dbRecordDataColumn());
+        $this->assertStringNotContainsString('updated_at', $dbRecordDataColumn());
+
+        $model->update(['data' => ['virtual' => 'bar']]);
+
+        $this->assertStringNotContainsString('created_at', $dbRecordDataColumn());
+        $this->assertStringNotContainsString('updated_at', $dbRecordDataColumn());
+    }
+}
+
+class TimestampModel extends Model
+{
+    use VirtualColumn;
+
+    public $timestamps = true;
+    protected $guarded = [];
 }
 
 class ParentModel extends Model
