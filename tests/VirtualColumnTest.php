@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Database\Eloquent\Model;
 use Stancl\VirtualColumn\VirtualColumn;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use PHPUnit\Framework\Attributes\Test;
 
 class VirtualColumnTest extends TestCase
 {
@@ -18,7 +19,7 @@ class VirtualColumnTest extends TestCase
         $this->loadMigrationsFrom(__DIR__ . '/etc/migrations');
     }
 
-    /** @test */
+    #[Test]
     public function keys_which_dont_have_their_own_column_go_into_data_json_column()
     {
         $model = MyModel::create([
@@ -59,7 +60,7 @@ class VirtualColumnTest extends TestCase
         $this->assertSame(null, $model->data);
     }
 
-    /** @test */
+    #[Test]
     public function model_is_always_decoded_when_accessed_by_user_event()
     {
         MyModel::retrieved(function (MyModel $model) {
@@ -90,7 +91,7 @@ class VirtualColumnTest extends TestCase
         MyModel::first();
     }
 
-    /** @test */
+    #[Test]
     public function column_names_are_generated_correctly()
     {
         // FooModel's virtual data column name is 'virtual'
@@ -107,7 +108,7 @@ class VirtualColumnTest extends TestCase
         $this->assertSame($virtualColumnName, $model->getColumnForQuery('foo'));
     }
 
-    /** @test */
+    #[Test]
     public function models_extending_a_parent_model_using_virtualcolumn_get_encoded_correctly()
     {
         // Create a model that extends a parent model using VirtualColumn
@@ -130,7 +131,7 @@ class VirtualColumnTest extends TestCase
 
     // maybe add an explicit test that the saving() and updating() listeners don't run twice?
 
-    /** @test */
+    #[Test]
     public function encrypted_casts_work_with_virtual_column() {
         // Custom encrypted castables have to be specified in the $customEncryptedCastables static property
         MyModel::$customEncryptedCastables = [EncryptedCast::class];
@@ -165,6 +166,29 @@ class VirtualColumnTest extends TestCase
         // Reset static property
         MyModel::$customEncryptedCastables = [];
     }
+
+    #[Test]
+    public function updating_model_does_not_store_timestamps_in_the_virtual_column() {
+        /** @var TimestampModel $model */
+        $model = TimestampModel::create();
+        $dbRecordDataColumn = fn () => DB::selectOne('select * from timestamp_models where id = ?', [$model->id])->data;
+
+        $this->assertStringNotContainsString('created_at', $dbRecordDataColumn());
+        $this->assertStringNotContainsString('updated_at', $dbRecordDataColumn());
+
+        $model->update(['data' => ['virtual' => 'bar']]);
+
+        $this->assertStringNotContainsString('created_at', $dbRecordDataColumn());
+        $this->assertStringNotContainsString('updated_at', $dbRecordDataColumn());
+    }
+}
+
+class TimestampModel extends Model
+{
+    use VirtualColumn;
+
+    public $timestamps = true;
+    protected $guarded = [];
 }
 
 class ParentModel extends Model

@@ -182,6 +182,8 @@ trait VirtualColumn
     {
         return [
             'id',
+            static::CREATED_AT,
+            static::UPDATED_AT,
         ];
     }
 
