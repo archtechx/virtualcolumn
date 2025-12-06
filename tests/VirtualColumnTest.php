@@ -146,11 +146,14 @@ class VirtualColumnTest extends TestCase
             'null_value' => null, // 'encrypted'
         ]);
 
+        $databaseRecord = json_decode(DB::select('SELECT data FROM my_models')[0]->data);
+
         foreach($encryptedAttributes as $key => $expectedValue) {
             $savedValue = $model->getAttributes()[$key]; // Encrypted
 
             if ($savedValue !== null) {
                 $this->assertTrue($model->valueEncrypted($savedValue));
+                $this->assertEquals($savedValue, $databaseRecord->$key); // Encrypted in DB
                 $this->assertNotEquals($expectedValue, $savedValue);
             }
 
